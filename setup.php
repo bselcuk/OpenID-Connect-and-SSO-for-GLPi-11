@@ -45,11 +45,7 @@ function plugin_init_openid() {
 }
 
 function plugin_openid_boot() {
-    global $PLUGIN_HOOKS;
-    
-    // GLPi 11.0: Controller rotaları için public_routes tanımlaması (no auth check)
-    $PLUGIN_HOOKS['public_routes']['openid'] = [
-        'plugin_openid_login',
-        'plugin_openid_callback'
-    ];
+    if (class_exists(\Glpi\Http\SessionManager::class)) {
+        \Glpi\Http\SessionManager::registerPluginNoAuthPath('openid', '/^/?(login|callback)/');
+    }
 }
