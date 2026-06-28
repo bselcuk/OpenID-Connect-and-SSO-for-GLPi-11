@@ -65,27 +65,39 @@ function plugin_openid_display_login() {
     $count = count($providers);
 
     if (!$mix_mode && !$no_auto) {
-        // Eğer sadece 1 tane aktif sağlayıcı varsa, ekranı hiç göstermeden direkt yönlendir
+        // Tekil sağlayıcı varsa doğrudan yönlendir (Dizi indeksini düzelttik: $providers['id'])
         if ($count === 1) {
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $providers[0]['id'];
             \Html::redirect($url);
             return;
         }
 
-        // Birden fazla sağlayıcı varsa formun tamamını DEĞİL, sadece standart girdi alanlarını gizle
+        // Standart login alanlarını (Kullanıcı adı, Parola, Select, Label, Buton ve taşıyıcı .mb-3 divleri) tamamen gizle
         echo "<style>
-            input[name='login_name'], 
-            input[name='login_password'], 
-            button[name='submit'], 
-            input[type='submit'], 
-            .form-check { display: none !important; }
+            .card-body form .mb-3,
+            .card-body form .form-group,
+            .card-body form .form-check,
+            .card-body form label,
+            .card-body form select,
+            .card-body form input:not([type='hidden']),
+            .card-body form button { 
+                display: none !important; 
+            }
+            /* Bizim butonlarımızı ve mesajımızı kapsayan div'in görünürlüğünü garantiye al */
+            #openid_login_container {
+                display: flex !important;
+            }
         </style>";
-        echo "<div class='alert alert-info mt-3' style='text-align:center;'>Standart giriş devre dışı bırakılmıştır.<br>Lütfen aşağıdaki sağlayıcılardan birini seçin.</div>";
     }
 
     // Sağlayıcı butonlarını listele
     if ($count > 0) {
-        echo "<div style='margin-top: 20px; display:flex; flex-direction:column; gap:10px; align-items:center;'>";
+        echo "<div id='openid_login_container' style='margin-top: 20px; flex-direction:column; gap:10px; align-items:center;'>";
+        
+        if (!$mix_mode && !$no_auto) {
+            echo "<div class='alert alert-info' style='text-align:center; width:100%; margin-bottom:15px;'>Standart giriş devre dışı bırakılmıştır.<br>Lütfen aşağıdaki sağlayıcılardan birini seçin.</div>";
+        }
+        
         foreach ($providers as $provider) {
             $icon = !empty($provider['icon']) ? $provider['icon'] : 'ti ti-brand-openid';
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $provider['id'];
