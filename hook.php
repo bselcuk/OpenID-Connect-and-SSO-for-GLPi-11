@@ -52,12 +52,27 @@ function plugin_openid_uninstall() {
 function plugin_openid_display_login() {
     global $CFG_GLPI, $DB;
     if (!$DB->tableExists('glpi_plugin_openid_providers')) return;
+
+    $config = \Config::getConfigurationValues('plugin_openid');
+    $mix_mode = isset($config['mix_mode']) ? $config['mix_mode'] : 1;
+    $no_auto = isset($_REQUEST['noAUTO']) ? $_REQUEST['noAUTO'] : 0;
+
+    if (!$mix_mode && !$no_auto) {
+        echo "<style>
+            .card-body form, #login_box form, input[name='login_name'], input[name='login_password'] { display: none !important; }
+        </style>";
+        echo "<div class='alert alert-info mt-3' style='text-align:center;'>Standart giriş devre dışı bırakılmıştır.<br>Lütfen aşağıdaki sağlayıcıları kullanın.</div>";
+    }
+
     $iterator = $DB->request(['FROM' => 'glpi_plugin_openid_providers', 'WHERE' => ['is_active' => 1]]);
-    foreach ($iterator as $provider) {
-        $icon = !empty($provider['icon']) ? $provider['icon'] : 'ti ti-brand-openid';
-        $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $provider['id'];
-        echo '<div style="margin-top: 10px; text-align: center;">';
-        echo '<a href="' . $url . '" class="btn btn-primary" style="width: 100%; max-width: 300px;">';
-        echo '<i class="' . $icon . '"></i> ' . $provider['name'] . ' ile Giriş Yap</a></div>';
+    if (count($iterator) > 0) {
+        echo "<div style='margin-top: 20px; display:flex; flex-direction:column; gap:10px; align-items:center;'>";
+        foreach ($iterator as $provider) {
+            $icon = !empty($provider['icon']) ? $provider['icon'] : 'ti ti-brand-openid';
+            $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $provider['id'];
+            echo '<a href="' . $url . '" class="btn btn-primary" style="width: 100%; max-width: 300px;">';
+            echo '<i class="' . $icon . '"></i> ' . $provider['name'] . ' ile Giriş Yap</a>';
+        }
+        echo "</div>";
     }
 }

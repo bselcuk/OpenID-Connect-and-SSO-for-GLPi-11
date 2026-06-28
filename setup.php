@@ -36,7 +36,7 @@ function plugin_init_openid() {
     global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS['csrf_compliant']['openid'] = true;
-    $PLUGIN_HOOKS['config_page']['openid'] = 'front/provider.php';
+    $PLUGIN_HOOKS['config_page']['openid'] = 'front/config.php';
     
     $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
     
