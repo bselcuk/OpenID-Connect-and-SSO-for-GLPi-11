@@ -1,20 +1,25 @@
 <?php
 include ("../../../inc/includes.php");
 \Session::checkRight("config", UPDATE);
-\Html::header("OpenID", $_SERVER['PHP_SELF'], "config", "plugins");
+
+global $CFG_GLPI;
+$form_url = $CFG_GLPI['root_doc'] . '/plugins/openid/front/config.php';
+
+\Html::header("OpenID", $form_url, "config", "plugins");
 
 if (isset($_POST["update"])) {
     \Config::setConfigurationValues('plugin_openid', ['mix_mode' => $_POST['mix_mode']]);
-    \Html::redirect($_SERVER['PHP_SELF']);
+    \Html::redirect($form_url);
 }
 $config = \Config::getConfigurationValues('plugin_openid');
 $mix_mode = isset($config['mix_mode']) ? $config['mix_mode'] : 1;
 
 echo "<div class='center' style='margin-top:20px;'>";
-echo "<a href='provider.php' class='btn btn-secondary mb-4'><i class='ti ti-brand-openid'></i> OpenID Sağlayıcılarını (Providers) Yönet</a>";
+echo "<a href='provider.php' class='btn btn-secondary mb-4' style='margin-right:10px;'><i class='ti ti-list'></i> Sağlayıcı Listesi</a>";
+echo "<a href='provider.form.php' class='btn btn-success mb-4'><i class='ti ti-plus'></i> Yeni Sağlayıcı Ekle</a>";
 echo "<br><br>";
 
-echo "<form action='{$_SERVER['PHP_SELF']}' method='post'>";
+echo "<form action='" . $form_url . "' method='post'>";
 echo "<table class='tab_cadre_fixe'>";
 echo "<tr><th colspan='2'>OpenID Genel Ayarları</th></tr>";
 echo "<tr class='tab_bg_1'>";
