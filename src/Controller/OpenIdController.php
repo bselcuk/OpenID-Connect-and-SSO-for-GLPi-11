@@ -21,7 +21,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
             return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
         }
 
-        $_SESSION['openid_provider_id'] = $provider_id;
+        $_SESSION['glpi_plugins']['openid_provider_id'] = $provider_id;
         $provider_url = rtrim($provider->fields['provider_url'], '/');
         $redirect_uri = $CFG_GLPI['url_base'] . '/plugins/openid/callback';
         
@@ -35,7 +35,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
     public function callback() {
         global $CFG_GLPI, $DB;
         $code = $_GET['code'] ?? '';
-        $provider_id = $_SESSION['openid_provider_id'] ?? 0;
+        $provider_id = $_SESSION['glpi_plugins']['openid_provider_id'] ?? 0;
         $provider = new \GlpiPlugin\Openid\Provider();
 
         if (empty($code) || !$provider->getFromDB($provider_id)) {
@@ -145,7 +145,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function logout() {
         global $CFG_GLPI;
-        $provider_id = $_SESSION['openid_provider_id'] ?? 0;
+        $provider_id = $_SESSION['glpi_plugins']['openid_provider_id'] ?? 0;
 
         if (class_exists(\Session::class)) {
             \Session::cleanOnLogout(); // GLPi 11.0 native logout cleaner

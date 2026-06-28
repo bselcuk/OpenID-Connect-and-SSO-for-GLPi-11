@@ -106,8 +106,8 @@ function plugin_openid_display_login() {
 function plugin_openid_post_init() {
     global $CFG_GLPI;
     $uri = $_SERVER['REQUEST_URI'] ?? '';
-    if (strpos($uri, '/front/logout.php') !== false) {
-        if (isset($_SESSION['openid_provider_id']) && $_SESSION['openid_provider_id'] > 0) {
+    if (strpos($uri, '/front/logout.php') !== false || isset($_GET['logout'])) {
+        if (isset($_SESSION['glpi_plugins']['openid_provider_id']) && $_SESSION['glpi_plugins']['openid_provider_id'] > 0) {
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/logout';
             header("Location: " . $url);
             exit;
