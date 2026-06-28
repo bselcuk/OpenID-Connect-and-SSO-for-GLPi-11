@@ -148,11 +148,12 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
         $provider_id = $_SESSION['openid_provider_id'] ?? 0;
 
         if (class_exists(\Session::class)) {
-            \Session::destroy();
-            \Auth::setRememberMeCookie('');
+            \Session::cleanOnLogout(); // GLPi 11.0 native logout cleaner
         }
 
-        $redirect_uri = $CFG_GLPI['url_base'] . '/index.php?noAUTO=1';
+        // noAUTO veya local_login parametresi YOK. Doğrudan index.php'ye gönderiyoruz.
+        // Böylece tekil sağlayıcı varsa tekrar SSO'ya (bu kez Keycloak'tan çıkış yapıldığı için KC login ekranına) düşer.
+        $redirect_uri = $CFG_GLPI['url_base'] . '/index.php';
 
         if ($provider_id > 0) {
             $provider = new \GlpiPlugin\Openid\Provider();
