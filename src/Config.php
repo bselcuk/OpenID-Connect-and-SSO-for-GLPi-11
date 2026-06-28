@@ -12,7 +12,7 @@ class Config extends \CommonGLPI {
         return [
             'title' => self::getTypeName(),
             'page'  => '/plugins/openid/front/config.php',
-            'icon'  => 'ti ti-shield-lock' // Yapılandırma menüsünde görünecek ikon
+            'icon'  => 'ti ti-shield-lock'
         ];
     }
 }

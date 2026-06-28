@@ -16,6 +16,10 @@ function plugin_init_openid() {
     // Login ve Logout Kancaları
     $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
     $PLUGIN_HOOKS['post_init']['openid'] = 'plugin_openid_post_init';
+
+    // Sınıfların GLPi çekirdeğine tanıtılması (Menü ve Hooklar için zorunlu)
+    Plugin::registerClass('GlpiPlugin\Openid\Provider');
+    Plugin::registerClass('GlpiPlugin\Openid\Config');
 }
 
 function plugin_version_openid() {

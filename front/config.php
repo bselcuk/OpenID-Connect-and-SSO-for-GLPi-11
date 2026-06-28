@@ -15,7 +15,6 @@ if (isset($_POST["update"])) {
 $config = Config::getConfigurationValues('plugin_openid');
 $mix_mode = isset($config['mix_mode']) ? $config['mix_mode'] : 1;
 
-// Eklenti meta verilerini dinamik olarak setup.php'den çekiyoruz
 $plugin_info = Plugin::getInfo('openid');
 
 echo "<div class='center' style='margin-top:20px;'>";
