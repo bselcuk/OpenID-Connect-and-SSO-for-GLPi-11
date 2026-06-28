@@ -44,8 +44,4 @@ function plugin_init_openid() {
     $PLUGIN_HOOKS['public_pages']['openid'] = ['^/login', '^/callback'];
 }
 
-function plugin_openid_boot() {
-    if (class_exists(\Glpi\Http\SessionManager::class)) {
-        \Glpi\Http\SessionManager::registerPluginStatelessPath('openid', '@^/?(login|callback)@');
-    }
-}
+// plugin_openid_boot is no longer needed; routes are handled by #[SecurityStrategy] attributes in the controller.

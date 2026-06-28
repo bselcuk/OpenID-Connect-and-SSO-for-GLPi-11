@@ -4,6 +4,8 @@ namespace GlpiPlugin\Openid\Controller;
 
 use Glpi\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
+use Glpi\Security\Attribute\SecurityStrategy;
+use Glpi\Http\Firewall;
 use User;
 use Auth;
 use Session;
@@ -12,13 +14,15 @@ use Html;
 class OpenIdController extends AbstractController {
 
     #[Route('/login', name: 'openid_login')]
+    #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function login() {
         global $CFG_GLPI;
         // Simülasyon: Sağlayıcıya gitmiş ve geri dönmüş gibi callback sayfasına yönlendiriyoruz
-        Html::redirect($CFG_GLPI['root_doc'] . '/plugins/openid/callback');
+        return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/plugins/openid/callback');
     }
 
     #[Route('/callback', name: 'openid_callback')]
+    #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function callback() {
         global $CFG_GLPI;
         
@@ -26,15 +30,13 @@ class OpenIdController extends AbstractController {
         $email_from_openid = 'admin@example.com'; 
         
         // 1. Find the User by email
-        $user = new User();
+        $user = new \User();
         
-        // Simülasyon için: ID=2 (Genellikle 'glpi' super-admin kullanıcısıdır) veya email ile bulma simülasyonu
-        // Gerçek kodda şöyle olacaktı: $user->getFromDBByCrit(['email' => $email_from_openid]);
-        // Şimdilik oturumun başarıyla açılabilmesi için ID=2 kullanıcısını yüklüyoruz.
+        // Simülasyon için: ID=2 (Genellikle 'glpi' super-admin kullanıcısıdır)
         $user->getFromDB(2); 
         
         // 2. Instantiate Auth
-        $auth = new Auth();
+        $auth = new \Auth();
         
         // 3. Assign user and set flags
         $auth->user = $user;
@@ -42,9 +44,9 @@ class OpenIdController extends AbstractController {
         $auth->extauth = 1;
         
         // 4. Call Session::init
-        Session::init($auth);
+        \Session::init($auth);
         
         // 5. Redirect to GLPi central page
-        Html::redirect($CFG_GLPI['root_doc'] . '/front/central.php');
+        return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/front/central.php');
     }
 }
