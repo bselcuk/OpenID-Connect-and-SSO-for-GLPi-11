@@ -2,46 +2,45 @@
 
 define('PLUGIN_OPENID_VERSION', '1.1.0');
 
+function plugin_init_openid() {
+    global $PLUGIN_HOOKS;
+
+    $PLUGIN_HOOKS['csrf_compliant']['openid'] = true;
+    
+    // Eklentiler listesindeki çark ikonunun gideceği adres
+    $PLUGIN_HOOKS['config_page']['openid'] = 'front/config.php';
+    
+    // GLPi "Yapılandırma (Setup)" menüsüne ikonlu menü öğesi ekleme
+    $PLUGIN_HOOKS['menu_toadd']['openid'] = ['config' => 'GlpiPlugin\Openid\Config'];
+
+    // Login ve Logout Kancaları
+    $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
+    $PLUGIN_HOOKS['post_init']['openid'] = 'plugin_openid_post_init';
+}
+
 function plugin_version_openid() {
     return [
-        'name'           => 'OpenID Login',
+        'name'           => 'OpenID Connect & SSO',
         'version'        => PLUGIN_OPENID_VERSION,
-        'author'         => 'macsoft',
+        'author'         => 'B.Selçuk ÖKSÜZ - MacSoft',
         'license'        => 'GPLv3+',
-        'homepage'       => 'https://gitloi.macsoft.com/itsmloi/openid',
+        'homepage'       => '',
         'requirements'   => [
             'glpi' => [
-                'min' => '11.0.0'
-            ],
-            'php' => [
-                'ext-curl' => true
+                'min' => '11.0'
             ]
         ]
     ];
 }
 
 function plugin_openid_check_prerequisites() {
-    if (version_compare(GLPI_VERSION, '11.0.0', '<')) {
-        echo "This plugin requires GLPI >= 11.0.0";
-        return false;
-    }
-    if (!extension_loaded('curl')) {
-        echo "This plugin requires PHP cURL extension";
+    if (version_compare(GLPI_VERSION, '11.0', '<')) {
+        echo "This plugin requires GLPI >= 11.0";
         return false;
     }
     return true;
 }
 
-function plugin_init_openid() {
-    global $PLUGIN_HOOKS;
-
-    $PLUGIN_HOOKS['csrf_compliant']['openid'] = true;
-    $PLUGIN_HOOKS['config_page']['openid'] = 'front/config.php';
-    
-    $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
-    $PLUGIN_HOOKS['post_init']['openid'] = 'plugin_openid_post_init';
-    
-    $PLUGIN_HOOKS['add_javascript']['openid'] = ['scripts/logout.js'];
-    
-    $PLUGIN_HOOKS['itemtypes']['openid'][] = 'GlpiPlugin\Openid\Provider';
+function plugin_openid_check_config() {
+    return true;
 }
