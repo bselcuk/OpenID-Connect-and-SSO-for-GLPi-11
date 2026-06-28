@@ -41,5 +41,5 @@ function plugin_init_openid() {
     $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
     
     // Register public page for callback
-    $PLUGIN_HOOKS['public_pages']['openid'] = ['callback'];
+    $PLUGIN_HOOKS['public_pages']['openid'] = ['^/login', '^/callback'];
 }
