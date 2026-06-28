@@ -65,10 +65,13 @@ function plugin_openid_display_login() {
     $count = count($providers);
 
     if (!$mix_mode && !$no_auto) {
-        // Tekil sağlayıcı varsa doğrudan yönlendir (Dizi indeksini düzelttik: $providers['id'])
+        // Tekil sağlayıcı varsa doğrudan yönlendir (Dizi indeksini düzelttik: $providers[0]['id'])
         if ($count === 1) {
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $providers[0]['id'];
-            \Html::redirect($url);
+            // Twig render döngüsünü kırmamak ve Exception fırlatmamak için JS yönlendirmesi kullanıyoruz.
+            // Yönlendirme anında login sayfasının "flaş" yapmasını önlemek için body'yi gizliyoruz.
+            echo "<style>body { display: none !important; }</style>";
+            echo "<script type='text/javascript'>window.location.replace('" . $url . "');</script>";
             return;
         }
 
