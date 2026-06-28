@@ -12,11 +12,11 @@ class Config extends CommonGLPI {
         return __('OpenID Configuration', 'openid');
     }
 
-    static function canCreate() {
+    public static function canCreate(): bool {
         return Session::haveRight('config', UPDATE);
     }
 
-    static function canView() {
+    public static function canView(): bool {
         return Session::haveRight('config', READ);
     }
 
