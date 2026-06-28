@@ -57,21 +57,40 @@ function plugin_openid_display_login() {
     $mix_mode = isset($config['mix_mode']) ? $config['mix_mode'] : 1;
     $no_auto = isset($_REQUEST['noAUTO']) ? $_REQUEST['noAUTO'] : 0;
 
+    $iterator = $DB->request(['FROM' => 'glpi_plugin_openid_providers', 'WHERE' => ['is_active' => 1]]);
+    $providers = [];
+    foreach ($iterator as $row) {
+        $providers[] = $row;
+    }
+    $count = count($providers);
+
     if (!$mix_mode && !$no_auto) {
+        // Eğer sadece 1 tane aktif sağlayıcı varsa, ekranı hiç göstermeden direkt yönlendir
+        if ($count === 1) {
+            $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $providers[0]['id'];
+            \Html::redirect($url);
+            return;
+        }
+
+        // Birden fazla sağlayıcı varsa formun tamamını DEĞİL, sadece standart girdi alanlarını gizle
         echo "<style>
-            .card-body form, #login_box form, input[name='login_name'], input[name='login_password'] { display: none !important; }
+            input[name='login_name'], 
+            input[name='login_password'], 
+            button[name='submit'], 
+            input[type='submit'], 
+            .form-check { display: none !important; }
         </style>";
-        echo "<div class='alert alert-info mt-3' style='text-align:center;'>Standart giriş devre dışı bırakılmıştır.<br>Lütfen aşağıdaki sağlayıcıları kullanın.</div>";
+        echo "<div class='alert alert-info mt-3' style='text-align:center;'>Standart giriş devre dışı bırakılmıştır.<br>Lütfen aşağıdaki sağlayıcılardan birini seçin.</div>";
     }
 
-    $iterator = $DB->request(['FROM' => 'glpi_plugin_openid_providers', 'WHERE' => ['is_active' => 1]]);
-    if (count($iterator) > 0) {
+    // Sağlayıcı butonlarını listele
+    if ($count > 0) {
         echo "<div style='margin-top: 20px; display:flex; flex-direction:column; gap:10px; align-items:center;'>";
-        foreach ($iterator as $provider) {
+        foreach ($providers as $provider) {
             $icon = !empty($provider['icon']) ? $provider['icon'] : 'ti ti-brand-openid';
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $provider['id'];
             echo '<a href="' . $url . '" class="btn btn-primary" style="width: 100%; max-width: 300px;">';
-            echo '<i class="' . $icon . '"></i> ' . $provider['name'] . ' ile Giriş Yap</a>';
+            echo '<i class="' . $icon . '"></i> ' . htmlentities($provider['name']) . ' ile Giriş Yap</a>';
         }
         echo "</div>";
     }
