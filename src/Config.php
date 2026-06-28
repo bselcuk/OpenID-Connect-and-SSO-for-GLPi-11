@@ -2,6 +2,7 @@
 
 namespace GlpiPlugin\Openid;
 
+use Glpi\Application\View\TemplateRenderer;
 use CommonGLPI;
 use Html;
 use Session;
