@@ -113,7 +113,11 @@ class OpenIdController extends AbstractController {
                 $auth->extauth = 1;
                 
                 \Session::init($auth);
-                return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/front/central.php');
+                $redirect_url = $CFG_GLPI['root_doc'] . '/front/central.php';
+                if (\Session::getCurrentInterface() === 'helpdesk') {
+                    $redirect_url = $CFG_GLPI['root_doc'] . '/Helpdesk';
+                }
+                return new \Symfony\Component\HttpFoundation\RedirectResponse($redirect_url);
             }
         }
         
