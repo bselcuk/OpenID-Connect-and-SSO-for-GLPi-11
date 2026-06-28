@@ -11,14 +11,14 @@ use Html;
 
 class OpenIdController extends AbstractController {
 
-    #[Route('/login', name: 'plugin_openid_login', methods: ['GET'])]
+    #[Route('/login', name: 'openid_login')]
     public function login() {
         global $CFG_GLPI;
         // Simülasyon: Sağlayıcıya gitmiş ve geri dönmüş gibi callback sayfasına yönlendiriyoruz
         Html::redirect($CFG_GLPI['root_doc'] . '/plugins/openid/callback');
     }
 
-    #[Route('/callback', name: 'plugin_openid_callback', methods: ['GET'])]
+    #[Route('/callback', name: 'openid_callback')]
     public function callback() {
         global $CFG_GLPI;
         
