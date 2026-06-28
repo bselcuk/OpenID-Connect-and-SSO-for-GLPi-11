@@ -14,12 +14,15 @@ class Provider extends \CommonDBTM {
         return __('OpenID Provider', 'openid');
     }
 
-    static function getMenuContent() {
-        global $CFG_GLPI;
+    public static function getMenuContent() {
         return [
             'title' => self::getTypeName(2),
             'page'  => '/plugins/openid/front/provider.php',
-            'icon'  => 'ti ti-brand-openid'
+            'icon'  => 'ti ti-brand-openid',
+            'links' => [
+                'search' => '/plugins/openid/front/provider.php',
+                'add'    => '/plugins/openid/front/provider.form.php'
+            ]
         ];
     }
 
@@ -144,9 +147,9 @@ class Provider extends \CommonDBTM {
         echo "</td>";
         echo "</tr>";
 
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>Sync Field Mapping (JSON):<br><small class='text-muted'>Profil senkronizasyonu için JSON. (Örn: {\"given_name\":\"firstname\", \"family_name\":\"realname\"})</small></td>";
-        echo "<td colspan='3'><textarea name='sync_field_mapping' class='form-control' rows='4' style='width: 100%;'>" . htmlentities($this->fields['sync_field_mapping'] ?? '') . "</textarea></td>";
+        echo "<tr class='tab_bg_1'>"; 
+        echo "<td>Sync Field Mapping (JSON):<br> <small class='text-muted'> Profil bilgilerini eşleştirmek için JSON formatı kullanın.<br> <b>Format:</b> {\"OpenID_Tarafı\": \"GLPI_Tarafı\"}<br><br> <b>Kullanabileceğiniz GLPi Sütun İsimleri:</b><br> - <b>name</b> (Kullanıcı Adı)<br> - <b>realname</b> (Soyad)<br> - <b>firstname</b> (Ad)<br> - <b>phone</b> (Telefon)<br> - <b>phone2</b> (Telefon 2)<br> - <b>mobile</b> (Cep Telefonu)<br> - <b>registration_number</b> (İdari numara)<br> - <b>comment</b> (Notlar)<br> - <b>timezone</b> (Saat dilimi)<br> - <b>is_active</b> (Etkin - 1 veya 0)<br> - <b>begin_date</b> (Geçerlilik Başlangıcı YYYY-MM-DD)<br> - <b>end_date</b> (Geçerlilik Bitişi YYYY-MM-DD)<br><br> <i>* Not: Fotoğraf fiziksel bir dosya olduğu için; Konum, Kategori ve Başlık gibi alanlar ise metin yerine ID numarası (locations_id vb.) gerektirdiği için salt metin eşleştirmesiyle (JSON) doğrudan senkronize edilemez. E-posta adresleri ise kimlik eşleşmesi sırasında sistem tarafından otomatik yönetilir.</i> </small></td>"; 
+        echo "<td colspan='3'><textarea name='sync_field_mapping' class='form-control' rows='14' style='width: 100%;'>" . htmlentities($this->fields['sync_field_mapping'] ?? '') . "</textarea></td>"; 
         echo "</tr>";
 
         $this->showFormButtons($options);
