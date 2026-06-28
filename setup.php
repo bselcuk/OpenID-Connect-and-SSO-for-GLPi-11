@@ -39,6 +39,7 @@ function plugin_init_openid() {
     $PLUGIN_HOOKS['config_page']['openid'] = 'front/config.php';
     
     $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
+    $PLUGIN_HOOKS['post_init']['openid'] = 'plugin_openid_post_init';
     
     $PLUGIN_HOOKS['add_javascript']['openid'] = ['scripts/logout.js'];
     

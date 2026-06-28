@@ -23,7 +23,7 @@ echo "<form action='" . $form_url . "' method='post'>";
 echo "<table class='tab_cadre_fixe'>";
 echo "<tr><th colspan='2'>OpenID Genel Ayarları</th></tr>";
 echo "<tr class='tab_bg_1'>";
-echo "<td>Mix Mod (GLPi Girişi + OpenID birlikte):<br><small class='text-muted'>Hayır seçilirse, GLPi yerel giriş formu gizlenir ve sadece OpenID butonları gösterilir. Acil durumlarda yerel giriş için URL sonuna '?noAUTO=1' ekleyebilirsiniz.</small></td>";
+echo "<td>Mix Mod (GLPi Girişi + OpenID birlikte):<br><small class='text-muted'>Hayır seçilirse, GLPi yerel giriş formu gizlenir ve sadece OpenID butonları gösterilir. Acil durumlarda yerel giriş için URL sonuna '?local_login=1' ekleyebilirsiniz.</small></td>";
 echo "<td>";
 \Dropdown::showYesNo('mix_mode', $mix_mode);
 echo "</td></tr>";

@@ -18,6 +18,7 @@ function plugin_openid_install() {
             `id` INT NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(255) DEFAULT NULL,
             `provider_url` VARCHAR(255) DEFAULT NULL,
+            `logout_url` VARCHAR(255) DEFAULT NULL,
             `client_id` VARCHAR(255) DEFAULT NULL,
             `client_secret` VARCHAR(255) DEFAULT NULL,
             `icon` VARCHAR(255) DEFAULT 'ti ti-brand-openid',
@@ -34,6 +35,10 @@ function plugin_openid_install() {
         $DB->doQuery($query);
     }
     
+    if (!$DB->fieldExists('glpi_plugin_openid_providers', 'logout_url')) {
+        $DB->doQuery("ALTER TABLE `glpi_plugin_openid_providers` ADD `logout_url` VARCHAR(255) NULL AFTER `provider_url`");
+    }
+
     return true;
 }
 
@@ -55,7 +60,8 @@ function plugin_openid_display_login() {
 
     $config = \Config::getConfigurationValues('plugin_openid');
     $mix_mode = isset($config['mix_mode']) ? $config['mix_mode'] : 1;
-    $no_auto = isset($_REQUEST['noAUTO']) ? $_REQUEST['noAUTO'] : 0;
+    $no_auto = isset($_REQUEST['noAUTO']) ? $_REQUEST['noAUTO'] : 0; // GLPi native logout flag
+    $local_login = isset($_REQUEST['local_login']) ? $_REQUEST['local_login'] : 0; // Yeni backdoor
 
     $iterator = $DB->request(['FROM' => 'glpi_plugin_openid_providers', 'WHERE' => ['is_active' => 1]]);
     $providers = [];
@@ -64,43 +70,29 @@ function plugin_openid_display_login() {
     }
     $count = count($providers);
 
-    if (!$mix_mode && !$no_auto) {
-        // Tekil sağlayıcı varsa doğrudan yönlendir (Dizi indeksini düzelttik: $providers[0]['id'])
-        if ($count === 1) {
+    if (!$mix_mode && !$local_login) {
+        // Formu her koşulda gizle (Admin backdoor kullanmadığı sürece)
+        echo "<style>
+            .card-body form .mb-3, .card-body form .form-group, .card-body form .form-check,
+            .card-body form label, .card-body form select, .card-body form input:not([type='hidden']),
+            .card-body form button { display: none !important; }
+            #openid_login_container { display: flex !important; }
+        </style>";
+
+        // Sadece tekil sağlayıcı varsa ve kullanıcı BİLİNÇLİ çıkış yapmadıysa (noAUTO=0) otomatik yönlendir
+        if ($count === 1 && !$no_auto) {
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $providers[0]['id'];
-            // Twig render döngüsünü kırmamak ve Exception fırlatmamak için JS yönlendirmesi kullanıyoruz.
-            // Yönlendirme anında login sayfasının "flaş" yapmasını önlemek için body'yi gizliyoruz.
             echo "<style>body { display: none !important; }</style>";
             echo "<script type='text/javascript'>window.location.replace('" . $url . "');</script>";
             return;
         }
-
-        // Standart login alanlarını (Kullanıcı adı, Parola, Select, Label, Buton ve taşıyıcı .mb-3 divleri) tamamen gizle
-        echo "<style>
-            .card-body form .mb-3,
-            .card-body form .form-group,
-            .card-body form .form-check,
-            .card-body form label,
-            .card-body form select,
-            .card-body form input:not([type='hidden']),
-            .card-body form button { 
-                display: none !important; 
-            }
-            /* Bizim butonlarımızı ve mesajımızı kapsayan div'in görünürlüğünü garantiye al */
-            #openid_login_container {
-                display: flex !important;
-            }
-        </style>";
     }
 
-    // Sağlayıcı butonlarını listele
     if ($count > 0) {
         echo "<div id='openid_login_container' style='margin-top: 20px; flex-direction:column; gap:10px; align-items:center;'>";
-        
-        if (!$mix_mode && !$no_auto) {
+        if (!$mix_mode && !$local_login) {
             echo "<div class='alert alert-info' style='text-align:center; width:100%; margin-bottom:15px;'>Standart giriş devre dışı bırakılmıştır.<br>Lütfen aşağıdaki sağlayıcılardan birini seçin.</div>";
         }
-        
         foreach ($providers as $provider) {
             $icon = !empty($provider['icon']) ? $provider['icon'] : 'ti ti-brand-openid';
             $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $provider['id'];
@@ -108,5 +100,17 @@ function plugin_openid_display_login() {
             echo '<i class="' . $icon . '"></i> ' . htmlentities($provider['name']) . ' ile Giriş Yap</a>';
         }
         echo "</div>";
+    }
+}
+
+function plugin_openid_post_init() {
+    global $CFG_GLPI;
+    $script = $_SERVER['PHP_SELF'] ?? '';
+    if (strpos($script, '/front/logout.php') !== false || isset($_GET['logout'])) {
+        if (isset($_SESSION['openid_provider_id']) && $_SESSION['openid_provider_id'] > 0) {
+            $url = $CFG_GLPI['url_base'] . '/plugins/openid/logout';
+            \Html::redirect($url);
+            exit;
+        }
     }
 }

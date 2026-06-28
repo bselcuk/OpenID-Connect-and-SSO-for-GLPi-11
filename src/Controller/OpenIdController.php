@@ -145,7 +145,6 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function logout() {
         global $CFG_GLPI;
-        $is_ext_auth = isset($_SESSION['glpiextauth']) && $_SESSION['glpiextauth'] == 1;
         $provider_id = $_SESSION['openid_provider_id'] ?? 0;
 
         if (class_exists(\Session::class)) {
@@ -153,15 +152,16 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
             \Auth::setRememberMeCookie('');
         }
 
-        $redirect_uri = $CFG_GLPI['url_base'] . '/index.php';
+        $redirect_uri = $CFG_GLPI['url_base'] . '/index.php?noAUTO=1';
 
-        if ($is_ext_auth && $provider_id > 0) {
+        if ($provider_id > 0) {
             $provider = new \GlpiPlugin\Openid\Provider();
-            if ($provider->getFromDB($provider_id)) {
-                $provider_url = rtrim($provider->fields['provider_url'], '/');
+            if ($provider->getFromDB($provider_id) && !empty($provider->fields['logout_url'])) {
+                $logout_url = trim($provider->fields['logout_url']);
                 $client_id = $provider->fields['client_id'];
-                $logout_url = $provider_url . '/protocol/openid-connect/logout?client_id=' . $client_id . '&post_logout_redirect_uri=' . urlencode($redirect_uri);
-                return new RedirectResponse($logout_url);
+                $sep = strpos($logout_url, '?') !== false ? '&' : '?';
+                $final_url = $logout_url . $sep . 'client_id=' . urlencode($client_id) . '&post_logout_redirect_uri=' . urlencode($redirect_uri);
+                return new RedirectResponse($final_url);
             }
         }
         return new RedirectResponse($redirect_uri);

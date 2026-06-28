@@ -60,6 +60,14 @@ class Provider extends \CommonDBTM {
         ];
 
         $tab[] = [
+            'id'                 => '9',
+            'table'              => $this->getTable(),
+            'field'              => 'logout_url',
+            'name'               => __('Logout URL'),
+            'datatype'           => 'string'
+        ];
+
+        $tab[] = [
             'id'                 => '4',
             'table'              => $this->getTable(),
             'field'              => 'client_id',
@@ -116,10 +124,10 @@ class Provider extends \CommonDBTM {
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Provider URL:<br><small class='text-muted'>OpenID sağlayıcısının kök adresi (Örn: https://accounts.google.com veya http://IP:8080/realms/glpi).</small></td>";
+        echo "<td>Provider URL:<br><small class='text-muted'>OpenID kök adresi (Sonunda '/' olmadan).<br>(Örn: http://192.168.X.X:8080/realms/glpi)</small></td>";
         echo "<td><input type='text' name='provider_url' value='" . htmlentities($this->fields['provider_url'] ?? '') . "' class='form-control'></td>";
-        echo "<td>Icon Class:<br><small class='text-muted'>Buton ikonu (Örn: ti ti-key, ti ti-brand-google).</small></td>";
-        echo "<td><input type='text' name='icon' value='" . htmlentities($this->fields['icon'] ?? 'ti ti-brand-openid') . "' class='form-control'></td>";
+        echo "<td>Logout URL (End Session):<br><small class='text-muted'>SSO Oturumunu kapatma adresi.<br>(Örn: http://.../protocol/openid-connect/logout)</small></td>";
+        echo "<td><input type='text' name='logout_url' value='" . htmlentities($this->fields['logout_url'] ?? '') . "' class='form-control'></td>";
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
