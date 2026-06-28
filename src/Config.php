@@ -2,7 +2,6 @@
 
 namespace GlpiPlugin\Openid;
 
-use Glpi\Application\View\TemplateRenderer;
 use CommonGLPI;
 use Html;
 use Session;
@@ -36,7 +35,7 @@ class Config extends CommonGLPI {
         ];
         
         // Output template
-        \TemplateRenderer::getInstance()->display('@openid/config.html.twig', $tpl_data);
+        \Glpi\Application\View\TemplateRenderer::getInstance()->display('@openid/config.html.twig', $tpl_data);
         
         return true;
     }
