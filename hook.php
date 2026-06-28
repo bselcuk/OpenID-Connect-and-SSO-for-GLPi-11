@@ -26,11 +26,11 @@ function plugin_openid_uninstall() {
 function plugin_openid_display_login() {
     global $CFG_GLPI;
     
-    $plugin_url = $CFG_GLPI['root_doc'] . '/plugins/openid';
+    $login_url = $CFG_GLPI['url_base'] . '/plugins/openid/login';
     
     // Echo HTML button on login screen
     echo '<div style="margin-top: 20px; text-align: center;">';
-    echo '<a href="' . $plugin_url . '/front/login.php" class="btn btn-primary">';
+    echo '<a href="' . $login_url . '" class="btn btn-primary">';
     echo '<i class="fas fa-sign-in-alt"></i> Login with OpenID';
     echo '</a>';
     echo '</div>';
