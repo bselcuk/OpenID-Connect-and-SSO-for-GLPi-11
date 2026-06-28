@@ -41,7 +41,13 @@ function plugin_init_openid() {
     $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
     
     // Register public page for callback
-    $PLUGIN_HOOKS['public_pages']['openid'] = ['^/login', '^/callback'];
+    $PLUGIN_HOOKS['public_pages']['openid'] = ['^/login', '^/callback', '^/logout'];
+    
+    $PLUGIN_HOOKS['add_javascript']['openid'] = ['scripts/logout.js'];
 }
 
-// plugin_openid_boot is no longer needed; routes are handled by #[SecurityStrategy] attributes in the controller.
+function plugin_openid_boot() {
+    if (class_exists(\Glpi\Http\SessionManager::class)) {
+        \Glpi\Http\SessionManager::registerPluginNoAuthPath('openid', '@^/?(login|callback|logout)@');
+    }
+}

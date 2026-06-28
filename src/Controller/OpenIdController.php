@@ -124,4 +124,27 @@ class OpenIdController extends AbstractController {
         // Eşleşme olmazsa yetkisiz uyarısı için
         return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
     }
+    #[Route('/logout', name: 'openid_logout')]
+    #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
+    public function logout() {
+        global $CFG_GLPI;
+        
+        $is_ext_auth = isset($_SESSION['glpiextauth']) && $_SESSION['glpiextauth'] == 1;
+        if (class_exists(\Session::class)) {
+            \Session::destroy();
+            \Auth::setRememberMeCookie('');
+        }
+
+        $redirect_uri = $CFG_GLPI['url_base'] . '/index.php';
+
+        if ($is_ext_auth) {
+            $config = \Config::getConfigurationValues('plugin_openid');
+            $provider_url = rtrim($config['provider_url'] ?? '', '/');
+            $client_id = $config['client_id'] ?? '';
+            $logout_url = $provider_url . '/protocol/openid-connect/logout?client_id=' . $client_id . '&post_logout_redirect_uri=' . urlencode($redirect_uri);
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($logout_url);
+        }
+
+        return new \Symfony\Component\HttpFoundation\RedirectResponse($redirect_uri);
+    }
 }
