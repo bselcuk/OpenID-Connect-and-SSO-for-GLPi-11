@@ -41,4 +41,6 @@ function plugin_init_openid() {
     $PLUGIN_HOOKS['display_login']['openid'] = 'plugin_openid_display_login';
     
     $PLUGIN_HOOKS['add_javascript']['openid'] = ['scripts/logout.js'];
+    
+    $PLUGIN_HOOKS['itemtypes']['openid'][] = 'GlpiPlugin\Openid\Provider';
 }
