@@ -17,36 +17,107 @@ class OpenIdController extends AbstractController {
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function login() {
         global $CFG_GLPI;
-        // Simülasyon: Sağlayıcıya gitmiş ve geri dönmüş gibi callback sayfasına yönlendiriyoruz
-        return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/plugins/openid/callback');
+        
+        $config = new \Config();
+        $settings = $config->getConfigurationValues('plugin_openid');
+        
+        $provider_url = $settings['provider_url'] ?? '';
+        $client_id = $settings['client_id'] ?? '';
+        
+        $redirect_uri = $CFG_GLPI['url_base'] . '/plugins/openid/callback';
+        
+        $params = [
+            'response_type' => 'code',
+            'client_id'     => $client_id,
+            'scope'         => 'openid email profile',
+            'redirect_uri'  => $redirect_uri
+        ];
+        
+        $url = rtrim($provider_url, '/') . '/protocol/openid-connect/auth?' . http_build_query($params);
+        
+        return new \Symfony\Component\HttpFoundation\RedirectResponse($url);
     }
 
     #[Route('/callback', name: 'openid_callback')]
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function callback() {
-        global $CFG_GLPI;
+        global $CFG_GLPI, $DB;
         
-        // Simülasyon: OpenID sağlayıcısından dönen kullanıcı emaili
-        $email_from_openid = 'admin@example.com'; 
+        $code = $_GET['code'] ?? null;
+        if (!$code) {
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php');
+        }
         
-        // 1. Find the User by email
-        $user = new \User();
+        $config = new \Config();
+        $settings = $config->getConfigurationValues('plugin_openid');
         
-        // Simülasyon için: ID=2 (Genellikle 'glpi' super-admin kullanıcısıdır)
-        $user->getFromDB(2); 
+        $provider_url = $settings['provider_url'] ?? '';
+        $client_id = $settings['client_id'] ?? '';
+        $client_secret = $settings['client_secret'] ?? '';
         
-        // 2. Instantiate Auth
-        $auth = new \Auth();
+        $redirect_uri = $CFG_GLPI['url_base'] . '/plugins/openid/callback';
+        $token_endpoint = rtrim($provider_url, '/') . '/protocol/openid-connect/token';
         
-        // 3. Assign user and set flags
-        $auth->user = $user;
-        $auth->auth_succeded = true;
-        $auth->extauth = 1;
+        $post_data = http_build_query([
+            'grant_type'    => 'authorization_code',
+            'code'          => $code,
+            'client_id'     => $client_id,
+            'client_secret' => $client_secret,
+            'redirect_uri'  => $redirect_uri
+        ]);
         
-        // 4. Call Session::init
-        \Session::init($auth);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $token_endpoint);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        $response = curl_exec($ch);
+        curl_close($ch);
         
-        // 5. Redirect to GLPi central page
-        return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/front/central.php');
+        if (!$response) {
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+        }
+        
+        $data = json_decode($response, true);
+        if (!isset($data['id_token'])) {
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+        }
+        
+        $parts = explode('.', $data['id_token']);
+        if (count($parts) < 2) {
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+        }
+        
+        $payload = json_decode(base64_decode($parts[1]), true);
+        $email = $payload['email'] ?? '';
+        
+        if (empty($email)) {
+            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+        }
+        
+        $iterator = $DB->request([
+            'FROM'  => 'glpi_useremails',
+            'WHERE' => ['email' => $email]
+        ]);
+        
+        if (count($iterator) > 0) {
+            $row = $iterator->current();
+            $users_id = $row['users_id'];
+            
+            $user = new \User();
+            if ($user->getFromDB($users_id)) {
+                $auth = new \Auth();
+                $auth->user = clone $user;
+                $auth->auth_succeded = true;
+                $auth->extauth = 1;
+                
+                \Session::init($auth);
+                return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/front/central.php');
+            }
+        }
+        
+        // Eşleşme olmazsa yetkisiz uyarısı için
+        return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
     }
 }
