@@ -4,11 +4,11 @@ namespace GlpiPlugin\Openid;
 class Provider extends \CommonDBTM {
     static $rightname = 'config';
 
-    public static function canCreate() { return \Session::haveRight('config', UPDATE); }
-    public static function canView() { return \Session::haveRight('config', READ); }
-    public static function canUpdate() { return \Session::haveRight('config', UPDATE); }
-    public static function canDelete() { return \Session::haveRight('config', UPDATE); }
-    public static function canPurge() { return \Session::haveRight('config', UPDATE); }
+    public static function canCreate(): bool { return (bool) \Session::haveRight('config', UPDATE); }
+    public static function canView(): bool { return (bool) \Session::haveRight('config', READ); }
+    public static function canUpdate(): bool { return (bool) \Session::haveRight('config', UPDATE); }
+    public static function canDelete(): bool { return (bool) \Session::haveRight('config', UPDATE); }
+    public static function canPurge(): bool { return (bool) \Session::haveRight('config', UPDATE); }
 
     static function getTypeName($nb = 0) {
         return __('OpenID Provider', 'openid');
