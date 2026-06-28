@@ -1,135 +1,153 @@
 <?php
-
 namespace GlpiPlugin\Openid\Controller;
 
-use Glpi\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Glpi\Http\SessionManager;
 use Glpi\Security\Attribute\SecurityStrategy;
 use Glpi\Http\Firewall;
-use User;
-use Auth;
-use Session;
-use Html;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Routing\Annotation\Route;
 
-class OpenIdController extends AbstractController {
+class OpenIdController extends \Glpi\Controller\AbstractController {
 
     #[Route('/login', name: 'openid_login')]
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function login() {
         global $CFG_GLPI;
-        
-        $config = new \Config();
-        $settings = $config->getConfigurationValues('plugin_openid');
-        
-        $provider_url = $settings['provider_url'] ?? '';
-        $client_id = $settings['client_id'] ?? '';
-        
+        $provider_id = $_GET['provider_id'] ?? 0;
+        $provider = new \GlpiPlugin\Openid\Provider();
+
+        if (!$provider->getFromDB($provider_id) || !$provider->fields['is_active']) {
+            \Session::addMessageAfterRedirect('Gecersiz veya pasif OpenID saglayicisi.', false, ERROR);
+            return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
+        }
+
+        $_SESSION['openid_provider_id'] = $provider_id;
+        $provider_url = rtrim($provider->fields['provider_url'], '/');
         $redirect_uri = $CFG_GLPI['url_base'] . '/plugins/openid/callback';
         
-        $params = [
-            'response_type' => 'code',
-            'client_id'     => $client_id,
-            'scope'         => 'openid email profile',
-            'redirect_uri'  => $redirect_uri
-        ];
-        
-        $url = rtrim($provider_url, '/') . '/protocol/openid-connect/auth?' . http_build_query($params);
-        
-        return new \Symfony\Component\HttpFoundation\RedirectResponse($url);
+        $url = $provider_url . '/protocol/openid-connect/auth?response_type=code&client_id=' . urlencode($provider->fields['client_id']) . '&scope=' . urlencode($provider->fields['scopes']) . '&redirect_uri=' . urlencode($redirect_uri);
+
+        return new RedirectResponse($url);
     }
 
     #[Route('/callback', name: 'openid_callback')]
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function callback() {
         global $CFG_GLPI, $DB;
-        
-        $code = $_GET['code'] ?? null;
-        if (!$code) {
-            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php');
+        $code = $_GET['code'] ?? '';
+        $provider_id = $_SESSION['openid_provider_id'] ?? 0;
+        $provider = new \GlpiPlugin\Openid\Provider();
+
+        if (empty($code) || !$provider->getFromDB($provider_id)) {
+            return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php?error=1');
         }
-        
-        $config = new \Config();
-        $settings = $config->getConfigurationValues('plugin_openid');
-        
-        $provider_url = $settings['provider_url'] ?? '';
-        $client_id = $settings['client_id'] ?? '';
-        $client_secret = $settings['client_secret'] ?? '';
-        
+
+        $provider_url = rtrim($provider->fields['provider_url'], '/');
         $redirect_uri = $CFG_GLPI['url_base'] . '/plugins/openid/callback';
-        $token_endpoint = rtrim($provider_url, '/') . '/protocol/openid-connect/token';
-        
-        $post_data = http_build_query([
-            'grant_type'    => 'authorization_code',
-            'code'          => $code,
-            'client_id'     => $client_id,
-            'client_secret' => $client_secret,
-            'redirect_uri'  => $redirect_uri
-        ]);
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $token_endpoint);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+
+        $ch = curl_init($provider_url . '/protocol/openid-connect/token');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'client_id' => $provider->fields['client_id'],
+            'client_secret' => $provider->fields['client_secret'],
+            'redirect_uri' => $redirect_uri
+        ]));
         $response = curl_exec($ch);
         curl_close($ch);
-        
-        if (!$response) {
-            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
-        }
-        
+
         $data = json_decode($response, true);
         if (!isset($data['id_token'])) {
-            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+            return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php?error=1');
         }
-        
+
         $parts = explode('.', $data['id_token']);
-        if (count($parts) < 2) {
-            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
-        }
-        
         $payload = json_decode(base64_decode($parts[1]), true);
-        $email = $payload['email'] ?? '';
-        
-        if (empty($email)) {
-            return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+
+        $claim_key = !empty($provider->fields['match_openid_claim']) ? $provider->fields['match_openid_claim'] : 'email';
+        $glpi_field = !empty($provider->fields['match_glpi_field']) ? $provider->fields['match_glpi_field'] : 'email';
+        $claim_value = $payload[$claim_key] ?? '';
+
+        if (empty($claim_value)) {
+             \Session::addMessageAfterRedirect("Token icinde '$claim_key' degeri bulunamadi.", false, ERROR);
+             return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
         }
-        
-        $iterator = $DB->request([
-            'FROM'  => 'glpi_useremails',
-            'WHERE' => ['email' => $email]
-        ]);
-        
-        if (count($iterator) > 0) {
-            $row = $iterator->current();
-            $users_id = $row['users_id'];
-            
-            $user = new \User();
-            if ($user->getFromDB($users_id)) {
-                $auth = new \Auth();
-                $auth->user = clone $user;
-                $auth->auth_succeded = true;
-                $auth->extauth = 1;
-                
-                \Session::init($auth);
-                $redirect_url = $CFG_GLPI['root_doc'] . '/front/central.php';
-                if (\Session::getCurrentInterface() === 'helpdesk') {
-                    $redirect_url = $CFG_GLPI['root_doc'] . '/Helpdesk';
-                }
-                return new \Symfony\Component\HttpFoundation\RedirectResponse($redirect_url);
+
+        $users_id = 0;
+        if ($glpi_field === 'email') {
+            $iterator = $DB->request(['SELECT' => 'users_id', 'FROM' => 'glpi_useremails', 'WHERE' => ['email' => $claim_value]]);
+            if (count($iterator)) {
+                $users_id = $iterator->current()['users_id'];
+            }
+        } else {
+            $iterator = $DB->request(['SELECT' => 'id', 'FROM' => 'glpi_users', 'WHERE' => [$glpi_field => $claim_value]]);
+            if (count($iterator)) {
+                $users_id = $iterator->current()['id'];
             }
         }
-        
-        // Eşleşme olmazsa yetkisiz uyarısı için
-        return new \Symfony\Component\HttpFoundation\RedirectResponse($CFG_GLPI['root_doc'] . '/index.php?error=1');
+
+        $user = new \User();
+        if ($users_id > 0) {
+            $user->getFromDB($users_id);
+        } else {
+            if ($provider->fields['auto_provision']) {
+                $input = [
+                    'name' => $payload['preferred_username'] ?? $claim_value,
+                    'is_active' => 1
+                ];
+                if ($glpi_field === 'email') {
+                    $input['_useremails'] = [$claim_value];
+                }
+                $users_id = $user->add($input);
+                if (!$users_id) {
+                     \Session::addMessageAfterRedirect("Kullanici otomatik olusturulamadi.", false, ERROR);
+                     return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
+                }
+                $user->getFromDB($users_id);
+            } else {
+                \Session::addMessageAfterRedirect("Yetkisiz erisim. Kullanici kaydi bulunamadi.", false, ERROR);
+                return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
+            }
+        }
+
+        if (!empty($provider->fields['sync_field_mapping'])) {
+            $mapping = json_decode($provider->fields['sync_field_mapping'], true);
+            if (is_array($mapping)) {
+                $update_input = ['id' => $users_id];
+                $needs_update = false;
+                foreach ($mapping as $oid_key => $g_field) {
+                    if (isset($payload[$oid_key]) && $user->fields[$g_field] != $payload[$oid_key]) {
+                        $update_input[$g_field] = $payload[$oid_key];
+                        $needs_update = true;
+                    }
+                }
+                if ($needs_update) {
+                    $user->update($update_input);
+                }
+            }
+        }
+
+        $auth = new \Auth();
+        $auth->user = clone $user;
+        $auth->auth_succeded = true;
+        $auth->extauth = 1;
+        \Session::init($auth);
+
+        $redirect_url = $CFG_GLPI['root_doc'] . '/front/central.php';
+        if (\Session::getCurrentInterface() === 'helpdesk') {
+            $redirect_url = $CFG_GLPI['root_doc'] . '/Helpdesk';
+        }
+        return new RedirectResponse($redirect_url);
     }
+
     #[Route('/logout', name: 'openid_logout')]
     #[SecurityStrategy(Firewall::STRATEGY_NO_CHECK)]
     public function logout() {
         global $CFG_GLPI;
-        
         $is_ext_auth = isset($_SESSION['glpiextauth']) && $_SESSION['glpiextauth'] == 1;
+        $provider_id = $_SESSION['openid_provider_id'] ?? 0;
+
         if (class_exists(\Session::class)) {
             \Session::destroy();
             \Auth::setRememberMeCookie('');
@@ -137,14 +155,15 @@ class OpenIdController extends AbstractController {
 
         $redirect_uri = $CFG_GLPI['url_base'] . '/index.php';
 
-        if ($is_ext_auth) {
-            $config = \Config::getConfigurationValues('plugin_openid');
-            $provider_url = rtrim($config['provider_url'] ?? '', '/');
-            $client_id = $config['client_id'] ?? '';
-            $logout_url = $provider_url . '/protocol/openid-connect/logout?client_id=' . $client_id . '&post_logout_redirect_uri=' . urlencode($redirect_uri);
-            return new \Symfony\Component\HttpFoundation\RedirectResponse($logout_url);
+        if ($is_ext_auth && $provider_id > 0) {
+            $provider = new \GlpiPlugin\Openid\Provider();
+            if ($provider->getFromDB($provider_id)) {
+                $provider_url = rtrim($provider->fields['provider_url'], '/');
+                $client_id = $provider->fields['client_id'];
+                $logout_url = $provider_url . '/protocol/openid-connect/logout?client_id=' . $client_id . '&post_logout_redirect_uri=' . urlencode($redirect_uri);
+                return new RedirectResponse($logout_url);
+            }
         }
-
-        return new \Symfony\Component\HttpFoundation\RedirectResponse($redirect_uri);
+        return new RedirectResponse($redirect_uri);
     }
 }

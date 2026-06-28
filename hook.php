@@ -50,14 +50,14 @@ function plugin_openid_uninstall() {
 }
 
 function plugin_openid_display_login() {
-    global $CFG_GLPI;
-    
-    $login_url = $CFG_GLPI['url_base'] . '/plugins/openid/login';
-    
-    // Echo HTML button on login screen
-    echo '<div style="margin-top: 20px; text-align: center;">';
-    echo '<a href="' . $login_url . '" class="btn btn-primary">';
-    echo '<i class="fas fa-sign-in-alt"></i> Login with OpenID';
-    echo '</a>';
-    echo '</div>';
+    global $CFG_GLPI, $DB;
+    if (!$DB->tableExists('glpi_plugin_openid_providers')) return;
+    $iterator = $DB->request(['FROM' => 'glpi_plugin_openid_providers', 'WHERE' => ['is_active' => 1]]);
+    foreach ($iterator as $provider) {
+        $icon = !empty($provider['icon']) ? $provider['icon'] : 'ti ti-brand-openid';
+        $url = $CFG_GLPI['url_base'] . '/plugins/openid/login?provider_id=' . $provider['id'];
+        echo '<div style="margin-top: 10px; text-align: center;">';
+        echo '<a href="' . $url . '" class="btn btn-primary" style="width: 100%; max-width: 300px;">';
+        echo '<i class="' . $icon . '"></i> ' . $provider['name'] . ' ile Giriş Yap</a></div>';
+    }
 }
