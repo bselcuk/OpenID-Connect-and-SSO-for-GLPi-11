@@ -2,13 +2,13 @@
 namespace GlpiPlugin\Openid;
 
 class Provider extends \CommonDBTM {
-    static $rightname = 'config';
+    public static $rightname = 'config';
 
-    public static function canCreate(): bool { return (bool) \Session::haveRight('config', UPDATE); }
-    public static function canView(): bool { return (bool) \Session::haveRight('config', READ); }
-    public static function canUpdate(): bool { return (bool) \Session::haveRight('config', UPDATE); }
-    public static function canDelete(): bool { return (bool) \Session::haveRight('config', UPDATE); }
-    public static function canPurge(): bool { return (bool) \Session::haveRight('config', UPDATE); }
+    public static function canCreate(): bool { return \Config::canUpdate(); }
+    public static function canView(): bool { return \Session::haveRight('config', READ); }
+    public static function canUpdate(): bool { return \Config::canUpdate(); }
+    public static function canDelete(): bool { return \Config::canUpdate(); }
+    public static function canPurge(): bool { return \Config::canUpdate(); }
 
     static function getTypeName($nb = 0) {
         return __('OpenID Provider', 'openid');
@@ -102,53 +102,53 @@ class Provider extends \CommonDBTM {
     public function showForm($ID, array $options = []) {
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
-        
+
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Name:</td>";
+        echo "<td>Name:<br><small class='text-muted'>Sağlayıcının görünen adı (Örn: Keycloak, Google, Azure AD).</small></td>";
         echo "<td><input type='text' name='name' value='" . htmlentities($this->fields['name'] ?? '') . "' class='form-control'></td>";
-        echo "<td>Active:</td>";
+        echo "<td>Active:<br><small class='text-muted'>Bu sağlayıcı giriş ekranında aktif mi?</small></td>";
         echo "<td>";
         \Dropdown::showYesNo('is_active', $this->fields['is_active'] ?? 1);
         echo "</td>";
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Provider URL:</td>";
+        echo "<td>Provider URL:<br><small class='text-muted'>OpenID sağlayıcısının kök adresi (Örn: https://accounts.google.com veya http://IP:8080/realms/glpi).</small></td>";
         echo "<td><input type='text' name='provider_url' value='" . htmlentities($this->fields['provider_url'] ?? '') . "' class='form-control'></td>";
-        echo "<td>Icon Class:</td>";
+        echo "<td>Icon Class:<br><small class='text-muted'>Buton ikonu (Örn: ti ti-key, ti ti-brand-google).</small></td>";
         echo "<td><input type='text' name='icon' value='" . htmlentities($this->fields['icon'] ?? 'ti ti-brand-openid') . "' class='form-control'></td>";
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Client ID:</td>";
+        echo "<td>Client ID:<br><small class='text-muted'>Sağlayıcıdan alınan benzersiz istemci kimliği.</small></td>";
         echo "<td><input type='text' name='client_id' value='" . htmlentities($this->fields['client_id'] ?? '') . "' class='form-control'></td>";
-        echo "<td>Client Secret:</td>";
+        echo "<td>Client Secret:<br><small class='text-muted'>Sağlayıcıdan alınan gizli anahtar (Sadece yetkili sunucular arası iletişimde kullanılır).</small></td>";
         echo "<td><input type='password' name='client_secret' value='" . htmlentities($this->fields['client_secret'] ?? '') . "' class='form-control'></td>";
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Scopes:</td>";
+        echo "<td>Scopes:<br><small class='text-muted'>İzin kapsamları. Standart OIDC için genellikle 'openid email profile' kullanılır.</small></td>";
         echo "<td><input type='text' name='scopes' value='" . htmlentities($this->fields['scopes'] ?? 'openid email profile') . "' class='form-control'></td>";
-        echo "<td>Auto-Provision:</td>";
+        echo "<td>Auto-Provision:<br><small class='text-muted'>Kullanıcı GLPi'de yoksa otomatik oluşturulsun mu?</small></td>";
         echo "<td>";
         \Dropdown::showYesNo('auto_provision', $this->fields['auto_provision'] ?? 0);
         echo "</td>";
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Match OpenID Claim:</td>";
+        echo "<td>Match OpenID Claim:<br><small class='text-muted'>Token'dan dönecek benzersiz kimlik değeri (Örn: email, preferred_username, sub).</small></td>";
         echo "<td><input type='text' name='match_openid_claim' value='" . htmlentities($this->fields['match_openid_claim'] ?? 'email') . "' class='form-control'></td>";
-        echo "<td>Match GLPI Field:</td>";
+        echo "<td>Match GLPI Field:<br><small class='text-muted'>Yukarıdaki claim değerinin GLPi veritabanında hangi alanla eşleştirileceği.</small></td>";
         echo "<td>";
         \Dropdown::showFromArray('match_glpi_field', ['email' => 'Email', 'name' => 'Username'], ['value' => $this->fields['match_glpi_field'] ?? 'email']);
         echo "</td>";
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Sync Field Mapping (JSON):</td>";
+        echo "<td>Sync Field Mapping (JSON):<br><small class='text-muted'>Profil senkronizasyonu için JSON. (Örn: {\"given_name\":\"firstname\", \"family_name\":\"realname\"})</small></td>";
         echo "<td colspan='3'><textarea name='sync_field_mapping' class='form-control' rows='4' style='width: 100%;'>" . htmlentities($this->fields['sync_field_mapping'] ?? '') . "</textarea></td>";
         echo "</tr>";
-        
+
         $this->showFormButtons($options);
         return true;
     }
