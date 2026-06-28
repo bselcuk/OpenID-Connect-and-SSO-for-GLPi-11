@@ -1,6 +1,6 @@
 <?php
 
-define('PLUGIN_OPENID_VERSION', '1.0.0');
+define('PLUGIN_OPENID_VERSION', '1.1.0');
 
 function plugin_version_openid() {
     return [
