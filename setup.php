@@ -46,6 +46,6 @@ function plugin_init_openid() {
 
 function plugin_openid_boot() {
     if (class_exists(\Glpi\Http\SessionManager::class)) {
-        \Glpi\Http\SessionManager::registerPluginNoAuthPath('openid', '@^/?(login|callback)@');
+        \Glpi\Http\SessionManager::registerPluginStatelessPath('openid', '@^/?(login|callback)@');
     }
 }
