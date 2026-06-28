@@ -99,80 +99,56 @@ class Provider extends \CommonDBTM {
         return $tab;
     }
 
-    function showForm($ID, array $options = []) {
+    public function showForm($ID, array $options = []) {
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Name') . "</td>";
-        echo "<td>";
-        \Html::autocompletionTextField($this, "name");
-        echo "</td>";
         
-        echo "<td>" . __('Active') . "</td>";
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>Name:</td>";
+        echo "<td><input type='text' name='name' value='" . htmlentities($this->fields['name'] ?? '') . "' class='form-control'></td>";
+        echo "<td>Active:</td>";
         echo "<td>";
-        \Dropdown::showYesNo("is_active", $this->fields["is_active"]);
+        \Dropdown::showYesNo('is_active', $this->fields['is_active'] ?? 1);
         echo "</td>";
-        echo "</tr>\n";
+        echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Provider URL', 'openid') . "</td>";
+        echo "<td>Provider URL:</td>";
+        echo "<td><input type='text' name='provider_url' value='" . htmlentities($this->fields['provider_url'] ?? '') . "' class='form-control'></td>";
+        echo "<td>Icon Class:</td>";
+        echo "<td><input type='text' name='icon' value='" . htmlentities($this->fields['icon'] ?? 'ti ti-brand-openid') . "' class='form-control'></td>";
+        echo "</tr>";
+
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>Client ID:</td>";
+        echo "<td><input type='text' name='client_id' value='" . htmlentities($this->fields['client_id'] ?? '') . "' class='form-control'></td>";
+        echo "<td>Client Secret:</td>";
+        echo "<td><input type='password' name='client_secret' value='" . htmlentities($this->fields['client_secret'] ?? '') . "' class='form-control'></td>";
+        echo "</tr>";
+
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>Scopes:</td>";
+        echo "<td><input type='text' name='scopes' value='" . htmlentities($this->fields['scopes'] ?? 'openid email profile') . "' class='form-control'></td>";
+        echo "<td>Auto-Provision:</td>";
         echo "<td>";
-        \Html::autocompletionTextField($this, "provider_url");
+        \Dropdown::showYesNo('auto_provision', $this->fields['auto_provision'] ?? 0);
         echo "</td>";
+        echo "</tr>";
+
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>Match OpenID Claim:</td>";
+        echo "<td><input type='text' name='match_openid_claim' value='" . htmlentities($this->fields['match_openid_claim'] ?? 'email') . "' class='form-control'></td>";
+        echo "<td>Match GLPI Field:</td>";
+        echo "<td>";
+        \Dropdown::showFromArray('match_glpi_field', ['email' => 'Email', 'name' => 'Username'], ['value' => $this->fields['match_glpi_field'] ?? 'email']);
+        echo "</td>";
+        echo "</tr>";
+
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>Sync Field Mapping (JSON):</td>";
+        echo "<td colspan='3'><textarea name='sync_field_mapping' class='form-control' rows='4' style='width: 100%;'>" . htmlentities($this->fields['sync_field_mapping'] ?? '') . "</textarea></td>";
+        echo "</tr>";
         
-        echo "<td>" . __('Client ID', 'openid') . "</td>";
-        echo "<td>";
-        \Html::autocompletionTextField($this, "client_id");
-        echo "</td>";
-        echo "</tr>\n";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Client Secret', 'openid') . "</td>";
-        echo "<td>";
-        echo "<input type='password' name='client_secret' value='" . \Html::cleanInputText($this->fields["client_secret"]) . "' size='30'>";
-        echo "</td>";
-        
-        echo "<td>" . __('Icon', 'openid') . "</td>";
-        echo "<td>";
-        \Html::autocompletionTextField($this, "icon", ['value' => empty($this->fields["icon"]) ? 'ti ti-brand-openid' : $this->fields["icon"]]);
-        echo "</td>";
-        echo "</tr>\n";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Scopes', 'openid') . "</td>";
-        echo "<td>";
-        \Html::autocompletionTextField($this, "scopes", ['value' => empty($this->fields["scopes"]) ? 'openid email profile' : $this->fields["scopes"]]);
-        echo "</td>";
-        
-        echo "<td>" . __('Match OpenID Claim', 'openid') . "</td>";
-        echo "<td>";
-        \Html::autocompletionTextField($this, "match_openid_claim", ['value' => empty($this->fields["match_openid_claim"]) ? 'email' : $this->fields["match_openid_claim"]]);
-        echo "</td>";
-        echo "</tr>\n";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Match GLPI Field', 'openid') . "</td>";
-        echo "<td>";
-        \Dropdown::showFromArray("match_glpi_field", [
-            'email' => __('Email'),
-            'name'  => __('Username')
-        ], ['value' => $this->fields["match_glpi_field"]]);
-        echo "</td>";
-        
-        echo "<td>" . __('Auto-Provision', 'openid') . "</td>";
-        echo "<td>";
-        \Dropdown::showYesNo("auto_provision", $this->fields["auto_provision"]);
-        echo "</td>";
-        echo "</tr>\n";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Sync Field Mapping (JSON)', 'openid') . "</td>";
-        echo "<td colspan='3'>";
-        echo "<textarea name='sync_field_mapping' cols='80' rows='4'>" . \Html::cleanInputText($this->fields["sync_field_mapping"]) . "</textarea>";
-        echo "</td>";
-        echo "</tr>\n";
-
         $this->showFormButtons($options);
         return true;
     }
