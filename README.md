@@ -45,6 +45,26 @@ To automatically sync data from the provider to the GLPi user account, provide a
 }
 ```
 
+### 🔑 Keycloak (KC) Configuration Example
+If you are using **Keycloak** as your Identity Provider, follow these standard settings when creating your Client:
+
+1. **Create Client:** 
+   - **Client ID:** `glpi` (or any unique name you prefer)
+   - **Client Protocol:** `openid-connect`
+2. **Capability Config (Access Type):**
+   - **Client authentication:** `ON` *(Crucial: This generates the Client Secret required by GLPi)*
+   - **Authentication flow:** Check `Standard flow` (ON). `Direct access grants` can be OFF.
+3. **Login Settings:** 
+   - **Valid Redirect URIs:** `https://your-glpi-domain.com/plugins/openid/front/callback.php`
+   - **Valid Post Logout Redirect URIs:** `https://your-glpi-domain.com/` (or your GLPi base URL)
+   - **Web Origins:** `+` (or your GLPi domain)
+4. **Credentials Tab:** 
+   - Copy the generated **Client Secret** and paste it into GLPi.
+5. **GLPi Provider Settings:**
+   - **Provider URL:** `https://your-keycloak.com/realms/your_realm_name` *(Do not add `/protocol/...` or trailing slash!)*
+   - **Logout URL:** `https://your-keycloak.com/realms/your_realm_name/protocol/openid-connect/logout`
+   - **Scopes:** `openid email profile`
+
 ## 🛠️ Installation
 
 1. Download the latest release (`openid-[version].zip`) from the repository.
