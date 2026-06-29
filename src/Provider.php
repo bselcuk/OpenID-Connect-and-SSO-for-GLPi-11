@@ -159,9 +159,12 @@ class Provider extends \CommonDBTM {
         echo "</td>";
         echo "</tr>";
 
+        $default_json = "{\n  \"email\": \"email\",\n  \"given_name\": \"firstname\",\n  \"family_name\": \"realname\"\n}";
+        $current_mapping = !empty($this->fields['sync_field_mapping']) ? $this->fields['sync_field_mapping'] : $default_json;
+
         echo "<tr class='tab_bg_1'>"; 
-        echo "<td>Sync Field Mapping (JSON):<br> <small class='text-muted'> Profil bilgilerini eşleştirmek için JSON formatı kullanın.<br> <b>Format:</b> {\"OpenID_Tarafı\": \"GLPI_Tarafı\"}<br><br> <b>Kullanabileceğiniz GLPi Sütun İsimleri:</b><br> - <b>name</b> (Kullanıcı Adı)<br> - <b>realname</b> (Soyad)<br> - <b>firstname</b> (Ad)<br> - <b>phone</b> (Telefon)<br> - <b>phone2</b> (Telefon 2)<br> - <b>mobile</b> (Cep Telefonu)<br> - <b>registration_number</b> (İdari numara)<br> - <b>comment</b> (Notlar)<br> - <b>timezone</b> (Saat dilimi)<br> - <b>is_active</b> (Etkin - 1 veya 0)<br> - <b>begin_date</b> (Geçerlilik Başlangıcı YYYY-MM-DD)<br> - <b>end_date</b> (Geçerlilik Bitişi YYYY-MM-DD)<br><br> <i>* Not: Fotoğraf fiziksel bir dosya olduğu için; Konum, Kategori ve Başlık gibi alanlar ise metin yerine ID numarası (locations_id vb.) gerektirdiği için salt metin eşleştirmesiyle (JSON) doğrudan senkronize edilemez. E-posta adresleri ise kimlik eşleşmesi sırasında sistem tarafından otomatik yönetilir.</i> </small></td>"; 
-        echo "<td colspan='3'><textarea name='sync_field_mapping' class='form-control' rows='14' style='width: 100%;'>" . htmlentities($this->fields['sync_field_mapping'] ?? '') . "</textarea></td>"; 
+        echo "<td>Sync Field Mapping (JSON):<br><br><small class='text-muted'>Profil bilgilerini eşleştirmek için JSON formatı kullanın.<br><b>Format:</b> {\"OpenID_Tarafı\": \"GLPI_Tarafı\"}<br><br><b>Kullanılabilir GLPi Alanları:</b><br>name, realname, firstname, phone, phone2, mobile, registration_number, comment, timezone, is_active, begin_date, end_date</small></td>"; 
+        echo "<td colspan='3'><textarea name='sync_field_mapping' class='form-control' rows='8' style='width: 100%; font-family: monospace;'>" . htmlentities($current_mapping) . "</textarea></td>"; 
         echo "</tr>";
 
         $this->showFormButtons($options);
