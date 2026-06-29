@@ -55,7 +55,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
             'redirect_uri' => $redirect_uri
         ]));
         $response = curl_exec($ch);
-        curl_close($ch);
+
 
         $data = json_decode($response, true);
         if (!isset($data['id_token'])) {
@@ -117,7 +117,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
                 $update_input = ['id' => $users_id];
                 $needs_update = false;
                 foreach ($mapping as $oid_key => $g_field) {
-                    if (isset($payload[$oid_key]) && $user->fields[$g_field] != $payload[$oid_key]) {
+                    if (isset($payload[$oid_key]) && array_key_exists($g_field, $user->fields) && $user->fields[$g_field] != $payload[$oid_key]) {
                         $update_input[$g_field] = $payload[$oid_key];
                         $needs_update = true;
                     }
