@@ -15,7 +15,7 @@ function plugin_openid_install() {
     
     if (!$DB->tableExists('glpi_plugin_openid_providers')) {
         $query = "CREATE TABLE `glpi_plugin_openid_providers` (
-            `id` INT NOT NULL AUTO_INCREMENT,
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(255) DEFAULT NULL,
             `provider_url` VARCHAR(255) DEFAULT NULL,
             `logout_url` VARCHAR(255) DEFAULT NULL,
@@ -33,6 +33,9 @@ function plugin_openid_install() {
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
         $DB->doQuery($query);
+    } else {
+        // Automatically migrate existing `id` column to UNSIGNED for GLPi 10+ compatibility
+        $DB->doQuery("ALTER TABLE `glpi_plugin_openid_providers` MODIFY `id` INT UNSIGNED NOT NULL AUTO_INCREMENT");
     }
     
     if (!$DB->fieldExists('glpi_plugin_openid_providers', 'logout_url')) {
