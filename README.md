@@ -47,10 +47,10 @@ To automatically sync data from the provider to the GLPi user account, provide a
 
 ## 🛠️ Installation
 
-1. Download the latest release (e.g. `openid-v1.2.0.zip`).
+1. Download the latest release (`openid-[version].zip`) from the repository.
 2. Extract the archive into your GLPi plugins directory:
    ```bash
-   unzip openid-v1.2.0.zip -d /var/www/glpi/plugins/
+   unzip openid-[version].zip -d /var/www/glpi/plugins/
    ```
    *(Ensure the resulting folder is named exactly `openid`)*
 3. Navigate to **Setup > Plugins** in your GLPi dashboard.
