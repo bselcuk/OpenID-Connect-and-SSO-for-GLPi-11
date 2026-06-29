@@ -130,10 +130,24 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
                 $update_input = ['id' => $users_id];
                 $needs_update = false;
                 foreach ($mapping as $oid_key => $g_field) {
-                    // Only update if it's not email (since email is handled via UserEmail)
-                    if ($g_field === 'email') continue;
+                    if (!isset($payload[$oid_key])) continue;
                     
-                    if (isset($payload[$oid_key]) && array_key_exists($g_field, $user->fields) && $user->fields[$g_field] != $payload[$oid_key]) {
+                    if ($g_field === 'email') {
+                        $new_email = $payload[$oid_key];
+                        $email_iterator = $DB->request(['SELECT' => 'id', 'FROM' => 'glpi_useremails', 'WHERE' => ['users_id' => $users_id, 'email' => $new_email]]);
+                        if (count($email_iterator) == 0) {
+                            $userEmail = new \UserEmail();
+                            $userEmail->add([
+                                'users_id'   => $users_id,
+                                'email'      => $new_email,
+                                'is_default' => 1,
+                                'is_dynamic' => 1
+                            ]);
+                        }
+                        continue;
+                    }
+                    
+                    if (array_key_exists($g_field, $user->fields) && $user->fields[$g_field] != $payload[$oid_key]) {
                         $update_input[$g_field] = $payload[$oid_key];
                         $needs_update = true;
                     }
@@ -143,6 +157,18 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
                     $user->getFromDB($users_id); // Refresh user object after update
                 }
             }
+        }
+
+        // Ensure user has at least one profile to prevent error=1 (Access Denied)
+        $profile_iterator = $DB->request(['SELECT' => 'id', 'FROM' => 'glpi_profiles_users', 'WHERE' => ['users_id' => $users_id]]);
+        if (count($profile_iterator) == 0) {
+            $profUser = new \Profile_User();
+            $profUser->add([
+                'users_id'    => $users_id,
+                'profiles_id' => 1, // 1 is usually Self-Service
+                'entities_id' => 0, // Root entity
+                'is_dynamic'  => 1
+            ]);
         }
 
         $auth = new \Auth();
