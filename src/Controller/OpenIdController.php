@@ -97,13 +97,26 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
                     'is_active' => 1
                 ];
                 if ($glpi_field === 'email') {
-                    $input['_useremails'] = [$claim_value];
+                    // In GLPi 10+, emails are managed via UserEmail class, not User::add() input.
+                    // We will add it right after user creation.
                 }
                 $users_id = $user->add($input);
                 if (!$users_id) {
                      \Session::addMessageAfterRedirect("Kullanici otomatik olusturulamadi.", false, ERROR);
                      return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
                 }
+                
+                // Add the email via UserEmail
+                if ($glpi_field === 'email' && !empty($claim_value)) {
+                    $userEmail = new \UserEmail();
+                    $userEmail->add([
+                        'users_id'   => $users_id,
+                        'email'      => $claim_value,
+                        'is_default' => 1,
+                        'is_dynamic' => 1
+                    ]);
+                }
+                
                 $user->getFromDB($users_id);
             } else {
                 \Session::addMessageAfterRedirect("Yetkisiz erisim. Kullanici kaydi bulunamadi.", false, ERROR);
@@ -117,6 +130,9 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
                 $update_input = ['id' => $users_id];
                 $needs_update = false;
                 foreach ($mapping as $oid_key => $g_field) {
+                    // Only update if it's not email (since email is handled via UserEmail)
+                    if ($g_field === 'email') continue;
+                    
                     if (isset($payload[$oid_key]) && array_key_exists($g_field, $user->fields) && $user->fields[$g_field] != $payload[$oid_key]) {
                         $update_input[$g_field] = $payload[$oid_key];
                         $needs_update = true;
@@ -124,6 +140,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
                 }
                 if ($needs_update) {
                     $user->update($update_input);
+                    $user->getFromDB($users_id); // Refresh user object after update
                 }
             }
         }
@@ -134,11 +151,7 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
         $auth->extauth = 1;
         \Session::init($auth);
 
-        $redirect_url = $CFG_GLPI['root_doc'] . '/front/central.php';
-        if (\Session::getCurrentInterface() === 'helpdesk') {
-            $redirect_url = $CFG_GLPI['root_doc'] . '/Helpdesk';
-        }
-        return new RedirectResponse($redirect_url);
+        return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php');
     }
 
     #[Route('/logout', name: 'openid_logout')]
