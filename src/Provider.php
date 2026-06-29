@@ -14,11 +14,10 @@ class Provider extends \CommonDBTM {
         return __('OpenID Provider', 'openid');
     }
 
-    public static function getSectorizedDetails(): array {
-        return ['config', self::class];
-    }
-
     public static function getMenuContent() {
+        if (!static::canView()) {
+            return false;
+        }
         return [
             'title' => self::getTypeName(2),
             'page'  => '/plugins/openid/front/provider.php',

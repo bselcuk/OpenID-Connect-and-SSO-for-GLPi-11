@@ -9,6 +9,9 @@ class Config extends \CommonGLPI {
     }
 
     public static function getMenuContent() {
+        if (!static::canView()) {
+            return false;
+        }
         return [
             'title' => self::getTypeName(),
             'page'  => '/plugins/openid/front/config.php',
