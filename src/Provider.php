@@ -117,10 +117,10 @@ class Provider extends \CommonDBTM {
     public function showForm($ID, array $options = []) {
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
-        echo "<input type='hidden' name='_glpi_csrf_token' value='" . \Session::getNewCSRFToken() . "' />";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Name:<br><small class='text-muted'>Sağlayıcının görünen adı (Örn: Keycloak, Google, Azure AD).</small></td>";
+        echo "<td>Name:<br><small class='text-muted'>Sağlayıcının görünen adı (Örn: Keycloak, Google, Azure AD).</small>";
+        echo "<input type='hidden' name='_glpi_csrf_token' value='" . \Session::getNewCSRFToken() . "' /></td>";
         echo "<td><input type='text' name='name' value='" . htmlentities($this->fields['name'] ?? '') . "' class='form-control'></td>";
         echo "<td>Active:<br><small class='text-muted'>Bu sağlayıcı giriş ekranında aktif mi?</small></td>";
         echo "<td>";
