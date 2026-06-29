@@ -47,6 +47,8 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
 
         $ch = curl_init($provider_url . '/protocol/openid-connect/token');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
             'grant_type' => 'authorization_code',
             'code' => $code,
@@ -55,10 +57,20 @@ class OpenIdController extends \Glpi\Controller\AbstractController {
             'redirect_uri' => $redirect_uri
         ]));
         $response = curl_exec($ch);
+        $curl_error = curl_error($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
+        \Toolbox::logInFile('openid', "Token Request HTTP Code: $http_code\n");
+        if ($response === false) {
+            \Toolbox::logInFile('openid', "cURL Error: $curl_error\n");
+        } else {
+            \Toolbox::logInFile('openid', "Token Response: $response\n");
+        }
 
         $data = json_decode($response, true);
         if (!isset($data['id_token'])) {
+            \Toolbox::logInFile('openid', "id_token is missing! Redirecting to error=1\n");
             return new RedirectResponse($CFG_GLPI['url_base'] . '/index.php?error=1');
         }
 
