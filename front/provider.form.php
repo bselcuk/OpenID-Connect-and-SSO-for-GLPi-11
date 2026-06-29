@@ -3,9 +3,7 @@ include ("../../../inc/includes.php");
 
 \Session::checkRight("config", READ);
 
-if (!empty($_POST)) {
-    \Session::checkCSRF($_POST);
-}
+
 
 $provider = new \GlpiPlugin\Openid\Provider();
 

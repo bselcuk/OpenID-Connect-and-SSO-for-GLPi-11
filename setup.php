@@ -1,6 +1,6 @@
 <?php
 
-define('PLUGIN_OPENID_VERSION', '1.3.4');
+define('PLUGIN_OPENID_VERSION', '1.3.5');
 
 function plugin_init_openid() {
     global $PLUGIN_HOOKS;
