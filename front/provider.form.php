@@ -3,6 +3,10 @@ include ("../../../inc/includes.php");
 
 \Session::checkRight("config", READ);
 
+if (!empty($_POST)) {
+    \Session::checkCSRF($_POST);
+}
+
 $provider = new \GlpiPlugin\Openid\Provider();
 
 if (isset($_POST["add"])) {
@@ -18,7 +22,13 @@ if (isset($_POST["add"])) {
     $provider->delete($_POST, 1);
     $provider->redirectToList();
 } else {
-    \Html::header(__('OpenID Providers', 'openid'), $_SERVER['PHP_SELF'], "config", "openid");
+    \Html::header(
+        \GlpiPlugin\Openid\Provider::getTypeName(2),
+        $_SERVER['PHP_SELF'],
+        "config",
+        \GlpiPlugin\Openid\Config::class,
+        \GlpiPlugin\Openid\Provider::class
+    );
     $provider->display($_GET);
     \Html::footer();
 }

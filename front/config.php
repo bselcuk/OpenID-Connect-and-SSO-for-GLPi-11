@@ -8,6 +8,7 @@ $form_url = $CFG_GLPI['root_doc'] . '/plugins/openid/front/config.php';
 Html::header("OpenID SSO", $form_url, "config", \GlpiPlugin\Openid\Config::class);
 
 if (isset($_POST["update"])) {
+    Session::checkCSRF($_POST);
     Config::setConfigurationValues('plugin_openid', ['mix_mode' => $_POST['mix_mode']]);
     Html::redirect($form_url);
 }
