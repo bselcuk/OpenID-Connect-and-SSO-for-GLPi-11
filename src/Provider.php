@@ -14,6 +14,10 @@ class Provider extends \CommonDBTM {
         return __('OpenID Provider', 'openid');
     }
 
+    public static function getSectorizedDetails(): array {
+        return ['config', self::class];
+    }
+
     public static function getMenuContent() {
         return [
             'title' => self::getTypeName(2),
