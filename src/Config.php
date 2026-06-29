@@ -16,11 +16,11 @@ class Config extends \CommonGLPI {
             'options' => [
                 \GlpiPlugin\Openid\Provider::class => [
                     'title' => \GlpiPlugin\Openid\Provider::getTypeName(2),
-                    'page'  => \GlpiPlugin\Openid\Provider::getSearchURL(false),
+                    'page'  => '/plugins/openid/front/provider.php',
                     'icon'  => 'ti ti-brand-openid',
                     'links' => [
-                        'search' => \GlpiPlugin\Openid\Provider::getSearchURL(false),
-                        'add'    => \GlpiPlugin\Openid\Provider::getFormURL(false)
+                        'search' => '/plugins/openid/front/provider.php',
+                        'add'    => '/plugins/openid/front/provider.form.php'
                     ]
                 ]
             ]
