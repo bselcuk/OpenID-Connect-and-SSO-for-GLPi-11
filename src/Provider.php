@@ -129,7 +129,7 @@ class Provider extends \CommonDBTM {
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>Provider URL:<br><small class='text-muted'>OpenID kök adresi (Sonunda '/' olmadan).<br>(Örn: http://192.168.X.X:8080/realms/glpi)</small></td>";
+        echo "<td>Provider URL:<br><small class='text-muted'>OpenID kök adresi (Sonunda '/' olmadan).<br>(Örn: http://192.168.X.X:8080/realms/my_realm)</small></td>";
         echo "<td><input type='text' name='provider_url' value='" . htmlentities($this->fields['provider_url'] ?? '') . "' class='form-control'></td>";
         echo "<td>Logout URL (End Session):<br><small class='text-muted'>SSO Oturumunu kapatma adresi.<br>(Örn: http://.../protocol/openid-connect/logout)</small></td>";
         echo "<td><input type='text' name='logout_url' value='" . htmlentities($this->fields['logout_url'] ?? '') . "' class='form-control'></td>";
