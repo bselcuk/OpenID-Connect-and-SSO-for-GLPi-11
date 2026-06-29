@@ -5,7 +5,7 @@ Session::checkRight("config", UPDATE);
 global $CFG_GLPI;
 $form_url = $CFG_GLPI['root_doc'] . '/plugins/openid/front/config.php';
 
-Html::header("OpenID SSO", $form_url, "config", "openid_config");
+Html::header("OpenID SSO", $form_url, "config", \GlpiPlugin\Openid\Config::class);
 
 if (isset($_POST["update"])) {
     Config::setConfigurationValues('plugin_openid', ['mix_mode' => $_POST['mix_mode']]);
@@ -33,7 +33,7 @@ echo "</div>";
 echo "</div></div>";
 
 // Aksiyon Butonları
-echo "<div style='margin-bottom: 25px;'>";
+echo "<div style='text-align: center; margin-bottom: 25px;'>";
 echo "<a href='provider.php' class='btn btn-secondary' style='margin-right:10px;'><i class='ti ti-list'></i> Sağlayıcı (Provider) Listesi</a>";
 echo "<a href='provider.form.php' class='btn btn-success'><i class='ti ti-plus'></i> Yeni Sağlayıcı Ekle</a>";
 echo "</div>";
