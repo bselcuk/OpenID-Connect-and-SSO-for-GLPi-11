@@ -5,7 +5,7 @@ class Provider extends \CommonDBTM {
     public static $rightname = 'config';
 
     public static function canCreate(): bool { return \Config::canUpdate(); }
-    public static function canView(): bool { return \Session::haveRight('config', READ); }
+    public static function canView(): bool { return \Config::canUpdate(); }
     public static function canUpdate(): bool { return \Config::canUpdate(); }
     public static function canDelete(): bool { return \Config::canUpdate(); }
     public static function canPurge(): bool { return \Config::canUpdate(); }
